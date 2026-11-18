@@ -1,0 +1,74 @@
+import React, { useState } from 'react';
+import { Download, Smartphone, X } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall.ts';
+
+export const PWAInstallButton: React.FC = () => {
+  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+
+  if (isInstalled) {
+    return null;
+  }
+
+  if (isInstallable) {
+    return (
+      <button
+        type="button"
+        onClick={() => void install()}
+        className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-[#14532D]/25 bg-[#14532D]/8 px-3.5 py-2 text-xs font-semibold text-[#14532D] transition-colors hover:bg-[#14532D]/14 whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14532D]"
+      >
+        <Download className="h-4 w-4" />
+        Instalar no Celular
+      </button>
+    );
+  }
+
+  if (isIOS) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setShowIOSGuide(true)}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-[#D4DBD0] bg-white px-3.5 py-2 text-xs font-semibold text-[#18241D] transition-colors hover:bg-[#F1F4EE] whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14532D]"
+        >
+          <Smartphone className="h-4 w-4" />
+          Instalar no iPhone
+        </button>
+
+        {showIOSGuide && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-sm rounded-2xl border border-[#E2E6DC] bg-white p-6 shadow-xl">
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="font-display text-lg font-bold text-[#18241D]">
+                  Instalar Radar Rural no iPhone
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowIOSGuide(false)}
+                  aria-label="Fechar instruções"
+                  className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#55635A] hover:bg-[#F1F4EE]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <ol className="mt-4 space-y-2.5 text-sm leading-relaxed text-[#3F4D44]">
+                <li>1. Toque no botão Compartilhar na barra do Safari.</li>
+                <li>2. Role para baixo e toque em Adicionar à Tela de Início.</li>
+                <li>3. Depois de instalado, o Cartão de Saúde e o registro por GPS funcionam mesmo sem sinal.</li>
+              </ol>
+              <button
+                type="button"
+                onClick={() => setShowIOSGuide(false)}
+                className="mt-5 w-full min-h-[44px] rounded-xl bg-[#14532D] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#166534]"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return null;
+};

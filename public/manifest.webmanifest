@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "Radar Rural — Canoinhas e Região",
+  "short_name": "Radar Rural",
+  "description": "Mapa vivo das estradas rurais, registro offline com GPS, avisos comunitários, coleta seletiva e cartão de saúde.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#14532D",
+  "background_color": "#F6F7F4",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Radar Rural",
+  "description": "Informação rápida de estradas, alertas comunitários offline, coleta seletiva e saúde para o interior de Canoinhas e região.",
+  "requestFramePermissions": ["geolocation", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
