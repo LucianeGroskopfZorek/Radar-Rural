@@ -3,13 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import {
+  ACHIEVEMENT_CATALOG,
   COMMUNITIES,
   COMMUNITY_UTILITIES,
   INITIAL_ALERTS,
+  INITIAL_CONTRIBUTORS,
   INITIAL_INCIDENTS,
 } from './src/data/canoinhasData.ts';
 import {
+  AchievementId,
   CommunityAlert,
+  ContributorProfile,
   IncidentCategory,
   RoadIncident,
   SeverityLevel,
@@ -21,6 +25,7 @@ interface PersistedState {
   incidents: RoadIncident[];
   alerts: CommunityAlert[];
   transportConfirmations: TransportConfirmation[];
+  contributors: ContributorProfile[];
 }
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -30,12 +35,30 @@ function loadState(): PersistedState {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      const parsed = JSON.parse(raw) as PersistedState;
+      const parsed = JSON.parse(raw) as Partial<PersistedState>;
       if (Array.isArray(parsed.incidents) && Array.isArray(parsed.alerts)) {
+        const existingIncIds = new Set(parsed.incidents.map((i) => i.id));
+        const existingAlertIds = new Set(parsed.alerts.map((a) => a.id));
+        const existingContributors =
+          Array.isArray(parsed.contributors) && parsed.contributors.length > 0
+            ? parsed.contributors
+            : [...INITIAL_CONTRIBUTORS];
+        const existingContribIds = new Set(existingContributors.map((c) => c.id));
+
         return {
-          incidents: parsed.incidents,
-          alerts: parsed.alerts,
+          incidents: [
+            ...parsed.incidents,
+            ...INITIAL_INCIDENTS.filter((i) => !existingIncIds.has(i.id)),
+          ],
+          alerts: [
+            ...parsed.alerts,
+            ...INITIAL_ALERTS.filter((a) => !existingAlertIds.has(a.id)),
+          ],
           transportConfirmations: parsed.transportConfirmations || [],
+          contributors: [
+            ...existingContributors,
+            ...INITIAL_CONTRIBUTORS.filter((c) => !existingContribIds.has(c.id)),
+          ],
         };
       }
     }
@@ -46,6 +69,7 @@ function loadState(): PersistedState {
     incidents: [...INITIAL_INCIDENTS],
     alerts: [...INITIAL_ALERTS],
     transportConfirmations: [],
+    contributors: [...INITIAL_CONTRIBUTORS],
   };
 }
 
@@ -60,17 +84,82 @@ function saveState(state: PersistedState): void {
   }
 }
 
+function computeStarsFromPoints(points: number): number {
+  if (points >= 90) return 5;
+  if (points >= 50) return 4;
+  if (points >= 30) return 3;
+  if (points >= 15) return 2;
+  return 1;
+}
+
+function computeReliability(c: ContributorProfile): number {
+  const base = 86 + Math.min(10, c.validationsReceived * 1.2) + Math.min(4, c.validationsGiven * 0.6);
+  return Math.min(100, Math.round(base));
+}
+
+function recalculateAchievements(c: ContributorProfile): void {
+  const set = new Set<AchievementId>(c.achievements);
+  if (c.reportsCount >= 1) set.add(AchievementId.RoadEye);
+  if (c.validationsGiven >= 3) set.add(AchievementId.TrustedValidator);
+  if (c.clearancesCount >= 1) set.add(AchievementId.ClearPath);
+  if (c.validationsReceived >= 5) set.add(AchievementId.CommunityVoice);
+  c.achievements = Array.from(set);
+  c.stars = computeStarsFromPoints(c.points);
+  c.reliabilityPct = computeReliability(c);
+}
+
+function getOrCreateContributor(
+  state: PersistedState,
+  rawName: string,
+  communityId: string,
+  roleLabel = 'Morador local'
+): ContributorProfile {
+  const cleanName = rawName.trim().slice(0, 80) || 'Morador da comunidade';
+  const normalized = cleanName.toLowerCase();
+  const existing = state.contributors.find((c) => c.name.trim().toLowerCase() === normalized);
+  if (existing) return existing;
+
+  const community = COMMUNITIES.find((c) => c.id === communityId) || COMMUNITIES[0];
+  const created: ContributorProfile = {
+    id: `contrib-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    name: cleanName,
+    communityId: community.id,
+    communityName: community.name,
+    roleLabel,
+    points: 0,
+    stars: 1,
+    reportsCount: 0,
+    validationsGiven: 0,
+    validationsReceived: 0,
+    clearancesCount: 0,
+    reliabilityPct: 88,
+    achievements: [],
+    updatedAt: new Date().toISOString(),
+  };
+  state.contributors.push(created);
+  return created;
+}
+
+function sortedContributors(state: PersistedState, communityId?: string): ContributorProfile[] {
+  const list =
+    communityId && communityId !== 'todas'
+      ? state.contributors.filter((c) => c.communityId === communityId)
+      : state.contributors;
+  return [...list].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return b.validationsGiven - a.validationsGiven;
+  });
+}
+
 function mapCoordsToSvg(communityId: string, lat?: number, lng?: number): { mapX: number; mapY: number } {
   const community = COMMUNITIES.find((c) => c.id === communityId) || COMMUNITIES[0];
   if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-    // Convert Canoinhas region lat/lng (-26.08..-26.34, -50.62..-50.18) smoothly onto 1000x600 SVG
     const normX = ((lng - -50.62) / (-50.18 - -50.62)) * 840 + 80;
     const normY = ((lat - -26.08) / (-26.34 - -26.08)) * 460 + 70;
     if (normX >= 60 && normX <= 940 && normY >= 60 && normY <= 540) {
       return { mapX: Math.round(normX), mapY: Math.round(normY) };
     }
   }
-  // Small deterministic jitter near community center so pins don't overlap exactly
   const offsetX = Math.round((Math.random() - 0.5) * 56);
   const offsetY = Math.round((Math.random() - 0.5) * 44);
   return {
@@ -81,12 +170,18 @@ function mapCoordsToSvg(communityId: string, lat?: number, lng?: number): { mapX
 
 function categoryDefaultTitle(category: IncidentCategory, severity: SeverityLevel): string {
   if (category === IncidentCategory.Flood) {
-    return severity === SeverityLevel.Blocked ? 'Trecho ou ponte alagada (sem passagem)' : 'Água na pista — atenção ao atravessar';
+    return severity === SeverityLevel.Blocked
+      ? 'Trecho ou ponte alagada (sem passagem)'
+      : 'Água na pista — atenção ao atravessar';
   }
   if (category === IncidentCategory.Tree) {
-    return severity === SeverityLevel.Blocked ? 'Queda de árvore fechando a estrada' : 'Árvore caída em meia pista';
+    return severity === SeverityLevel.Blocked
+      ? 'Queda de árvore fechando a estrada'
+      : 'Árvore caída em meia pista';
   }
-  return severity === SeverityLevel.Blocked ? 'Queda de barreira / estrada bloqueada' : 'Lama pesada ou buraco fundo (só 4x4/trator)';
+  return severity === SeverityLevel.Blocked
+    ? 'Queda de barreira / estrada bloqueada'
+    : 'Lama pesada ou buraco fundo (só 4x4/trator)';
 }
 
 function categoryFallbackPhoto(category: IncidentCategory, severity: SeverityLevel): string {
@@ -107,14 +202,34 @@ async function startServer() {
   app.use(express.json({ limit: '8mb' }));
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, communities: COMMUNITIES.length, incidents: state.incidents.length });
+    res.json({
+      ok: true,
+      communities: COMMUNITIES.length,
+      incidents: state.incidents.length,
+      contributors: state.contributors.length,
+    });
+  });
+
+  app.get('/api/maps-config', (_req, res) => {
+    const apiKey =
+      process.env.VITE_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
+    res.json({ apiKey });
+  });
+
+  app.get('/api/ranking', (req, res) => {
+    const communityId = typeof req.query.community === 'string' ? req.query.community : undefined;
+    res.json({
+      contributors: sortedContributors(state, communityId),
+      achievementsCatalog: ACHIEVEMENT_CATALOG,
+    });
   });
 
   app.get('/api/incidents', (req, res) => {
     const communityId = typeof req.query.community === 'string' ? req.query.community : undefined;
-    const list = communityId && communityId !== 'todas'
-      ? state.incidents.filter((i) => i.communityId === communityId)
-      : state.incidents;
+    const list =
+      communityId && communityId !== 'todas'
+        ? state.incidents.filter((i) => i.communityId === communityId)
+        : state.incidents;
     const sorted = [...list].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
@@ -135,6 +250,18 @@ async function startServer() {
     const { mapX, mapY } = mapCoordsToSvg(community.id, lat, lng);
     const now = new Date().toISOString();
 
+    const authorName = String(body.authorName || 'Morador da comunidade').slice(0, 80);
+    const author = getOrCreateContributor(state, authorName, community.id);
+    author.points += 10;
+    author.reportsCount += 1;
+    if (category === IncidentCategory.Flood) {
+      author.achievements = Array.from(
+        new Set([...author.achievements, AchievementId.RainSentinel])
+      );
+    }
+    author.updatedAt = now;
+    recalculateAchievements(author);
+
     const newIncident: RoadIncident = {
       id: body.id || `inc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       communityId: community.id,
@@ -147,16 +274,20 @@ async function startServer() {
       ).slice(0, 500),
       category,
       severity,
-      solutionStage: body.notifyNeighbors !== false ? SolutionStage.NeighborsNotified : SolutionStage.Reported,
+      solutionStage:
+        body.notifyNeighbors !== false ? SolutionStage.NeighborsNotified : SolutionStage.Reported,
       photoUrl: body.photoUrl || categoryFallbackPhoto(category, severity),
       lat,
       lng,
       mapX,
       mapY,
-      authorName: String(body.authorName || 'Morador da comunidade').slice(0, 80),
+      authorName: author.name,
+      authorStars: author.stars,
+      authorAchievements: author.achievements,
       createdAt: body.createdAt || now,
       updatedAt: now,
       confirmations: 1,
+      validatedBy: [],
       notifyNeighbors: body.notifyNeighbors !== false,
       isOfflinePending: false,
     };
@@ -174,12 +305,20 @@ async function startServer() {
         kind: newIncident.severity === SeverityLevel.Blocked ? 'bloqueio' : 'atencao',
         createdAt: now,
         incidentId: newIncident.id,
+        authorName: author.name,
+        authorStars: author.stars,
+        validationsCount: 1,
+        validatedBy: [],
       };
       state.alerts.unshift(alert);
     }
 
     saveState(state);
-    res.status(201).json({ incident: newIncident, alerts: state.alerts.slice(0, 25) });
+    res.status(201).json({
+      incident: newIncident,
+      alerts: state.alerts.slice(0, 25),
+      contributors: sortedContributors(state),
+    });
   });
 
   app.post('/api/incidents/sync', (req, res) => {
@@ -204,6 +343,18 @@ async function startServer() {
       const lng = typeof item.lng === 'number' ? item.lng : community.centerLng;
       const { mapX, mapY } = mapCoordsToSvg(community.id, lat, lng);
 
+      const authorName = String(item.authorName || 'Morador (envio offline)').slice(0, 80);
+      const author = getOrCreateContributor(state, authorName, community.id);
+      author.points += 10;
+      author.reportsCount += 1;
+      if (category === IncidentCategory.Flood) {
+        author.achievements = Array.from(
+          new Set([...author.achievements, AchievementId.RainSentinel])
+        );
+      }
+      author.updatedAt = now;
+      recalculateAchievements(author);
+
       const created: RoadIncident = {
         id: item.id || `inc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         communityId: community.id,
@@ -211,7 +362,8 @@ async function startServer() {
         roadName: String(item.roadName || `Estrada Geral de ${community.name}`).slice(0, 120),
         title: String(item.title || categoryDefaultTitle(category, severity)).slice(0, 140),
         description: String(
-          item.description || `Registro feito sem sinal e sincronizado automaticamente ao retornar à rede.`
+          item.description ||
+            `Registro feito sem sinal e sincronizado automaticamente ao retornar à rede.`
         ).slice(0, 500),
         category,
         severity,
@@ -222,10 +374,13 @@ async function startServer() {
         lng,
         mapX,
         mapY,
-        authorName: String(item.authorName || 'Morador (envio offline)').slice(0, 80),
+        authorName: author.name,
+        authorStars: author.stars,
+        authorAchievements: author.achievements,
         createdAt: item.createdAt || now,
         updatedAt: now,
         confirmations: 1,
+        validatedBy: [],
         notifyNeighbors: item.notifyNeighbors !== false,
         isOfflinePending: false,
       };
@@ -243,12 +398,20 @@ async function startServer() {
           kind: created.severity === SeverityLevel.Blocked ? 'bloqueio' : 'atencao',
           createdAt: now,
           incidentId: created.id,
+          authorName: author.name,
+          authorStars: author.stars,
+          validationsCount: 1,
+          validatedBy: [],
         });
       }
     }
 
     saveState(state);
-    res.json({ syncedCount: synced.length, synced });
+    res.json({
+      syncedCount: synced.length,
+      synced,
+      contributors: sortedContributors(state),
+    });
   });
 
   app.post('/api/incidents/:id/confirm', (req, res) => {
@@ -257,10 +420,110 @@ async function startServer() {
       res.status(404).json({ error: 'Ocorrência não encontrada.' });
       return;
     }
+    const body = req.body || {};
+    const validatorName = String(body.validatorName || 'Vizinho da região').trim().slice(0, 80);
+    const now = new Date().toISOString();
+
     incident.confirmations += 1;
-    incident.updatedAt = new Date().toISOString();
+    incident.validatedBy = Array.from(new Set([...(incident.validatedBy || []), validatorName]));
+    incident.updatedAt = now;
+
+    // Award points to validator (+5)
+    const validator = getOrCreateContributor(
+      state,
+      validatorName,
+      String(body.communityId || incident.communityId)
+    );
+    validator.points += 5;
+    validator.validationsGiven += 1;
+    validator.updatedAt = now;
+    recalculateAchievements(validator);
+
+    // Award credibility points to original author (+8)
+    const author = state.contributors.find(
+      (c) => c.name.trim().toLowerCase() === incident.authorName.trim().toLowerCase()
+    );
+    if (author && author.id !== validator.id) {
+      author.points += 8;
+      author.validationsReceived += 1;
+      author.updatedAt = now;
+      recalculateAchievements(author);
+      incident.authorStars = author.stars;
+      incident.authorAchievements = author.achievements;
+    }
+
+    // Keep linked alert validation count synced
+    const linkedAlert = state.alerts.find((a) => a.incidentId === incident.id);
+    if (linkedAlert) {
+      linkedAlert.validationsCount = (linkedAlert.validationsCount || 1) + 1;
+      linkedAlert.validatedBy = Array.from(
+        new Set([...(linkedAlert.validatedBy || []), validatorName])
+      );
+      if (author) linkedAlert.authorStars = author.stars;
+    }
+
     saveState(state);
-    res.json(incident);
+    res.json({
+      incident,
+      validator,
+      contributors: sortedContributors(state),
+      alerts: state.alerts.slice(0, 25),
+    });
+  });
+
+  app.post('/api/alerts/:id/validate', (req, res) => {
+    const alert = state.alerts.find((a) => a.id === req.params.id);
+    if (!alert) {
+      res.status(404).json({ error: 'Alerta não encontrado.' });
+      return;
+    }
+    const body = req.body || {};
+    const validatorName = String(body.validatorName || 'Vizinho da região').trim().slice(0, 80);
+    const now = new Date().toISOString();
+
+    alert.validationsCount = (alert.validationsCount || 1) + 1;
+    alert.validatedBy = Array.from(new Set([...(alert.validatedBy || []), validatorName]));
+
+    const validator = getOrCreateContributor(
+      state,
+      validatorName,
+      String(body.communityId || alert.communityId)
+    );
+    validator.points += 5;
+    validator.validationsGiven += 1;
+    validator.updatedAt = now;
+    recalculateAchievements(validator);
+
+    if (alert.authorName) {
+      const author = state.contributors.find(
+        (c) => c.name.trim().toLowerCase() === alert.authorName!.trim().toLowerCase()
+      );
+      if (author && author.id !== validator.id) {
+        author.points += 6;
+        author.validationsReceived += 1;
+        author.updatedAt = now;
+        recalculateAchievements(author);
+        alert.authorStars = author.stars;
+      }
+    }
+
+    if (alert.incidentId) {
+      const linkedInc = state.incidents.find((i) => i.id === alert.incidentId);
+      if (linkedInc) {
+        linkedInc.confirmations += 1;
+        linkedInc.validatedBy = Array.from(
+          new Set([...(linkedInc.validatedBy || []), validatorName])
+        );
+      }
+    }
+
+    saveState(state);
+    res.json({
+      alert,
+      validator,
+      contributors: sortedContributors(state),
+      incidents: state.incidents,
+    });
   });
 
   app.patch('/api/incidents/:id/status', (req, res) => {
@@ -269,7 +532,7 @@ async function startServer() {
       res.status(404).json({ error: 'Ocorrência não encontrada.' });
       return;
     }
-    const { solutionStage, resolutionNote } = req.body || {};
+    const { solutionStage, resolutionNote, actorName } = req.body || {};
     const now = new Date().toISOString();
 
     if (Object.values(SolutionStage).includes(solutionStage)) {
@@ -284,6 +547,13 @@ async function startServer() {
       if (!incident.resolutionNote) {
         incident.resolutionNote = 'Trecho desobstruído e liberado para tráfego normal.';
       }
+      const clearerName = String(actorName || 'Morador da comunidade').trim().slice(0, 80);
+      const clearer = getOrCreateContributor(state, clearerName, incident.communityId);
+      clearer.points += 12;
+      clearer.clearancesCount += 1;
+      clearer.updatedAt = now;
+      recalculateAchievements(clearer);
+
       state.alerts.unshift({
         id: `alt-res-${Date.now()}`,
         communityId: incident.communityId,
@@ -294,19 +564,28 @@ async function startServer() {
         kind: 'retorno_liberado',
         createdAt: now,
         incidentId: incident.id,
+        authorName: clearer.name,
+        authorStars: clearer.stars,
+        validationsCount: 1,
+        validatedBy: [],
       });
     }
 
     incident.updatedAt = now;
     saveState(state);
-    res.json({ incident, alerts: state.alerts.slice(0, 25) });
+    res.json({
+      incident,
+      alerts: state.alerts.slice(0, 25),
+      contributors: sortedContributors(state),
+    });
   });
 
   app.get('/api/alerts', (req, res) => {
     const communityId = typeof req.query.community === 'string' ? req.query.community : undefined;
-    const list = communityId && communityId !== 'todas'
-      ? state.alerts.filter((a) => a.communityId === communityId)
-      : state.alerts;
+    const list =
+      communityId && communityId !== 'todas'
+        ? state.alerts.filter((a) => a.communityId === communityId)
+        : state.alerts;
     const sorted = [...list].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -314,7 +593,8 @@ async function startServer() {
   });
 
   app.get('/api/utilities', (req, res) => {
-    const communityId = typeof req.query.community === 'string' ? req.query.community : 'marcilio-dias';
+    const communityId =
+      typeof req.query.community === 'string' ? req.query.community : 'marcilio-dias';
     const base = COMMUNITY_UTILITIES[communityId] || COMMUNITY_UTILITIES['marcilio-dias'];
     const communityConfirmations = state.transportConfirmations.filter(
       (c) => c.communityId === communityId

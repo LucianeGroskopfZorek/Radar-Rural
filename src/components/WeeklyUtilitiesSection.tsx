@@ -79,69 +79,65 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
   };
 
   return (
-    <section id="utilidades" aria-labelledby="utilidades-heading" className="space-y-4">
+    <section id="utilidades" aria-labelledby="utilidades-heading" className="space-y-5">
       <div>
-        <h2 id="utilidades-heading" className="font-display text-2xl font-bold tracking-tight text-[#18241D] sm:text-3xl">
+        <h2 id="utilidades-heading" className="font-display text-2xl font-bold tracking-tight text-[#141A16] sm:text-3xl">
           Utilidades da Semana
         </h2>
-        <p className="mt-1 text-sm text-[#4A5950]">
-          Serviços rotineiros em {community.name} para você não perder viagem nem prazo
+        <p className="mt-1 text-sm text-[#525C54]">
+          Agenda de coleta, saúde itinerante e ficha médica offline em {community.name}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Card 1: Coleta & Descarte */}
-        <article className="flex flex-col justify-between rounded-2xl border border-[#D9DFD4] bg-white p-5">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF0E4] text-[#14532D]">
-                  <Recycle className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-bold text-[#18241D]">
-                    Coleta & Descarte
-                  </h3>
-                  <p className="text-xs text-[#55635A]">{community.name}</p>
-                </div>
+        <article className="flex flex-col justify-between rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(20,26,22,0.04),0_8px_24px_rgba(20,26,22,0.03)]">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-[#525C54]">Agenda de coleta</p>
+                <h3 className="mt-0.5 font-display text-lg font-bold text-[#141A16]">
+                  Coleta & Descarte
+                </h3>
               </div>
+              <Recycle className="h-5 w-5 text-[#14532D]" />
             </div>
 
-            <div className="space-y-3 border-t border-[#EEF2EA] pt-4 text-sm">
+            <div className="space-y-4 border-t border-black/6 pt-4 text-sm">
               <div>
-                <p className="text-xs font-bold text-[#14532D]">
+                <p className="text-xs font-semibold text-[#14532D]">
                   Coleta Seletiva · {schedule.selectiveCollection.dayOfWeek}
                 </p>
-                <p className="mt-1 font-semibold text-[#18241D]">
+                <p className="mt-1 font-semibold text-[#141A16]">
                   {schedule.selectiveCollection.nextDateLabel}
                 </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-[#55635A]">
+                <p className="mt-1 text-xs leading-relaxed text-[#525C54]">
                   {schedule.selectiveCollection.routeDescription}
                 </p>
               </div>
 
-              <div className="border-t border-[#EEF2EA] pt-3">
-                <p className="text-xs font-bold text-[#18241D]">
+              <div className="border-t border-black/6 pt-3.5">
+                <p className="text-xs font-semibold text-[#141A16]">
                   Agrotóxicos e Eletrônicos
                 </p>
-                <p className="mt-1 text-xs font-semibold text-[#3F4D44] tabular-nums">
+                <p className="mt-1 text-xs font-medium text-[#343E37] tabular-nums">
                   {schedule.pesticideAndElectronics.nextDate} · {schedule.pesticideAndElectronics.location}
                 </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-[#55635A]">
+                <p className="mt-1 text-xs leading-relaxed text-[#525C54]">
                   {schedule.pesticideAndElectronics.itemsAccepted}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 border-t border-[#EEF2EA] pt-4">
+          <div className="mt-6 pt-2">
             <button
               type="button"
               onClick={toggleReminder}
-              className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition-colors ${
+              className={`flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                 reminderEnabled
-                  ? 'border-[#14532D]/30 bg-[#EAF0E4] text-[#14532D]'
-                  : 'border-[#D4DBD0] bg-white text-[#3F4D44] hover:bg-[#F7F9F5]'
+                  ? 'bg-[#EAF1E8] text-[#14532D]'
+                  : 'bg-black/[0.04] text-[#343E37] hover:bg-black/[0.08]'
               }`}
             >
               {reminderEnabled ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
@@ -153,46 +149,44 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
         </article>
 
         {/* Card 2: Saúde no Interior */}
-        <article className="flex flex-col justify-between rounded-2xl border border-[#D9DFD4] bg-white p-5">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF0E4] text-[#14532D]">
-                <Stethoscope className="h-5 w-5" />
-              </div>
+        <article className="flex flex-col justify-between rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(20,26,22,0.04),0_8px_24px_rgba(20,26,22,0.03)]">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="font-display text-base font-bold text-[#18241D]">
+                <p className="text-xs font-medium text-[#525C54]">{schedule.ruralHealth.location}</p>
+                <h3 className="mt-0.5 font-display text-lg font-bold text-[#141A16]">
                   Saúde no Interior
                 </h3>
-                <p className="text-xs text-[#55635A]">{schedule.ruralHealth.location}</p>
               </div>
+              <Stethoscope className="h-5 w-5 text-[#14532D]" />
             </div>
 
-            <div className="space-y-3 border-t border-[#EEF2EA] pt-4 text-sm">
+            <div className="space-y-4 border-t border-black/6 pt-4 text-sm">
               <div>
-                <p className="text-xs font-bold text-[#14532D]">
+                <p className="text-xs font-semibold text-[#14532D]">
                   {schedule.ruralHealth.serviceTitle}
                 </p>
-                <p className="mt-1 font-semibold text-[#18241D] tabular-nums">
+                <p className="mt-1 font-semibold text-[#141A16] tabular-nums">
                   {schedule.ruralHealth.scheduleLabel}
                 </p>
               </div>
 
-              <div className="border-t border-[#EEF2EA] pt-3">
-                <p className="text-xs font-bold text-[#18241D]">
+              <div className="border-t border-black/6 pt-3.5">
+                <p className="text-xs font-semibold text-[#141A16]">
                   Transporte Saúde para Canoinhas
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-[#3F4D44]">
+                <p className="mt-1 text-xs leading-relaxed text-[#525C54]">
                   {schedule.ruralHealth.transportDeadline}
                 </p>
-                <p className="mt-1 text-xs font-medium text-[#55635A] tabular-nums">
+                <p className="mt-1.5 text-xs font-medium text-[#14532D] tabular-nums">
                   {schedule.ruralHealth.confirmedSeatsCount} moradores confirmados nesta semana
                 </p>
               </div>
 
               {myConfirmations.length > 0 && (
-                <div className="rounded-xl border border-[#15803D]/25 bg-[#EAF0E4]/65 px-3 py-2 text-xs text-[#14532D]">
+                <p className="text-xs font-medium text-[#14532D]">
                   Última confirmação: <strong>{myConfirmations[0].patientName}</strong> ({myConfirmations[0].appointmentDate})
-                </div>
+                </p>
               )}
 
               {transportMessage && (
@@ -201,25 +195,25 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
             </div>
           </div>
 
-          <div className="mt-5 border-t border-[#EEF2EA] pt-4">
+          <div className="mt-6 pt-2">
             {!showTransportForm ? (
               <button
                 type="button"
                 onClick={() => setShowTransportForm(true)}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#14532D] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#166534]"
+                className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[#14532D] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#166534]"
               >
                 <Bus className="h-4 w-4" />
                 Confirmar Vaga no Transporte
               </button>
             ) : (
-              <form onSubmit={handleSubmitTransport} className="space-y-2.5 rounded-xl border border-[#D4DBD0] bg-[#F8FAF6] p-3">
+              <form onSubmit={handleSubmitTransport} className="space-y-2.5 rounded-2xl bg-[#F7F6F2] p-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#18241D]">Confirmar transporte</span>
+                  <span className="text-xs font-semibold text-[#141A16]">Confirmar transporte</span>
                   <button
                     type="button"
                     onClick={() => setShowTransportForm(false)}
                     aria-label="Cancelar confirmação"
-                    className="rounded p-1 text-[#55635A] hover:bg-white"
+                    className="rounded p-1 text-[#525C54] hover:bg-white"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -230,7 +224,7 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="Nome completo do paciente"
-                  className="min-h-[40px] w-full rounded-lg border border-[#D4DBD0] bg-white px-3 text-xs text-[#18241D] focus:border-[#14532D] focus:outline-none"
+                  className="min-h-[40px] w-full rounded-xl border border-black/10 bg-white px-3 text-xs text-[#141A16] focus:border-[#14532D] focus:outline-none"
                 />
                 <input
                   type="text"
@@ -238,19 +232,19 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Posto / Hospital / Exame"
-                  className="min-h-[40px] w-full rounded-lg border border-[#D4DBD0] bg-white px-3 text-xs text-[#18241D] focus:border-[#14532D] focus:outline-none"
+                  className="min-h-[40px] w-full rounded-xl border border-black/10 bg-white px-3 text-xs text-[#141A16] focus:border-[#14532D] focus:outline-none"
                 />
                 <input
                   type="text"
                   value={appointmentDate}
                   onChange={(e) => setAppointmentDate(e.target.value)}
                   placeholder="Dia e horário da consulta"
-                  className="min-h-[40px] w-full rounded-lg border border-[#D4DBD0] bg-white px-3 text-xs text-[#18241D] focus:border-[#14532D] focus:outline-none"
+                  className="min-h-[40px] w-full rounded-xl border border-black/10 bg-white px-3 text-xs text-[#141A16] focus:border-[#14532D] focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={!isOnline || submitting}
-                  className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-lg bg-[#14532D] px-3 py-2 text-xs font-bold text-white hover:bg-[#166534] disabled:opacity-50"
+                  className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-full bg-[#14532D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#166534] disabled:opacity-50"
                 >
                   <Check className="h-4 w-4" />
                   {submitting ? 'Confirmando...' : isOnline ? 'Enviar Confirmação' : 'Necessita sinal'}
@@ -261,51 +255,49 @@ export const WeeklyUtilitiesSection: React.FC<WeeklyUtilitiesSectionProps> = ({
         </article>
 
         {/* Card 3: Meu Cartão de Saúde (QR Code Offline) */}
-        <article className="flex flex-col justify-between rounded-2xl border border-[#D9DFD4] bg-white p-5">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAF0E4] text-[#14532D]">
-                <QrCode className="h-5 w-5" />
-              </div>
+        <article className="flex flex-col justify-between rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(20,26,22,0.04),0_8px_24px_rgba(20,26,22,0.03)]">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="font-display text-base font-bold text-[#18241D]">
+                <p className="text-xs font-medium text-[#525C54]">Disponível sem sinal</p>
+                <h3 className="mt-0.5 font-display text-lg font-bold text-[#141A16]">
                   Meu Cartão de Saúde
                 </h3>
-                <p className="text-xs text-[#55635A]">Funciona no posto mesmo sem sinal</p>
               </div>
+              <QrCode className="h-5 w-5 text-[#14532D]" />
             </div>
 
-            <div className="space-y-2.5 border-t border-[#EEF2EA] pt-4 text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[#55635A]">Morador</span>
-                <span className="font-bold text-[#18241D] truncate">{healthCard.fullName}</span>
+            <dl className="divide-y divide-black/6 border-t border-black/6 text-xs">
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <dt className="text-[#525C54]">Morador</dt>
+                <dd className="font-semibold text-[#141A16] truncate">{healthCard.fullName}</dd>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[#55635A]">Tipo sanguíneo</span>
-                <span className="font-mono font-bold text-[#B91C1C] tabular-nums">{healthCard.bloodType}</span>
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <dt className="text-[#525C54]">Tipo sanguíneo</dt>
+                <dd className="font-mono font-bold text-[#B91C1C] tabular-nums">{healthCard.bloodType}</dd>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[#55635A]">Alergias</span>
-                <span className="font-semibold text-[#18241D] truncate max-w-[190px]">{healthCard.allergies}</span>
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <dt className="text-[#525C54]">Alergias</dt>
+                <dd className="font-medium text-[#141A16] truncate max-w-[190px]">{healthCard.allergies}</dd>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[#55635A]">Uso contínuo</span>
-                <span className="font-semibold text-[#18241D] truncate max-w-[190px]">{healthCard.continuousMedications}</span>
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <dt className="text-[#525C54]">Uso contínuo</dt>
+                <dd className="font-medium text-[#141A16] truncate max-w-[190px]">{healthCard.continuousMedications}</dd>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[#55635A]">Contato emergência</span>
-                <span className="font-mono font-medium text-[#18241D] tabular-nums">{healthCard.emergencyContactPhone}</span>
+              <div className="flex items-center justify-between gap-2 py-2.5">
+                <dt className="text-[#525C54]">Emergência</dt>
+                <dd className="font-mono font-medium text-[#141A16] tabular-nums">{healthCard.emergencyContactPhone}</dd>
               </div>
-            </div>
+            </dl>
           </div>
 
-          <div className="mt-5 border-t border-[#EEF2EA] pt-4">
+          <div className="mt-6 pt-2">
             <button
               type="button"
               onClick={onOpenHealthCard}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#14532D] bg-white px-4 py-2 text-xs font-bold text-[#14532D] transition-colors hover:bg-[#EAF0E4]"
+              className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-black/[0.04] px-4 py-2 text-xs font-semibold text-[#141A16] transition-colors hover:bg-black/[0.08]"
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-4 w-4 text-[#14532D]" />
               Abrir QR Code e Editar Ficha
             </button>
           </div>

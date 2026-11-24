@@ -185,16 +185,16 @@ export const ReportIncidentSheet: React.FC<ReportIncidentSheetProps> = ({
       aria-modal="true"
       aria-labelledby="report-incident-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-[#D9DFD4] bg-white shadow-2xl sm:rounded-2xl">
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-black/8 bg-white shadow-2xl sm:rounded-3xl">
         {/* Grab handle on mobile */}
-        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[#D4DBD0] sm:hidden" />
+        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-black/15 sm:hidden" />
 
-        <div className="flex items-center justify-between border-b border-[#E7ECE2] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-black/8 px-6 py-4">
           <div>
-            <h2 id="report-incident-title" className="font-display text-lg font-bold text-[#18241D]">
+            <h2 id="report-incident-title" className="font-display text-lg font-bold text-[#141A16]">
               Avisar Problema na Estrada
             </h2>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#55635A] tabular-nums">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#57645C] tabular-nums">
               <MapPin className="h-3.5 w-3.5 text-[#14532D]" />
               {isLocating
                 ? 'Obtendo ponto GPS...'
@@ -206,7 +206,7 @@ export const ReportIncidentSheet: React.FC<ReportIncidentSheetProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Fechar janela de registro"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[#4A5950] hover:bg-[#F1F4EE]"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[#57645C] hover:bg-[#F7F6F2]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -415,7 +415,7 @@ export const ReportIncidentSheet: React.FC<ReportIncidentSheetProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#14532D] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#166534] disabled:opacity-60"
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[#14532D] px-5 py-3 text-sm font-bold text-white shadow-xs transition-colors hover:bg-[#166534] disabled:opacity-60"
             >
               {isOnline ? <Send className="h-4 w-4" /> : <CloudOff className="h-4 w-4" />}
               {isSubmitting

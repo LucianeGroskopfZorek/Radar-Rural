@@ -8,7 +8,7 @@ import {
   MapPin,
   MessageCircle,
   OctagonAlert,
-  ThumbsUp,
+  ShieldCheck,
   X,
 } from 'lucide-react';
 import { RoadIncident, SeverityLevel, SolutionStage } from '../types.ts';
@@ -19,13 +19,15 @@ import {
   getSeverityLabel,
   getSolutionStageLabel,
 } from '../utils/formatters.ts';
+import { AchievementSymbols, CredibilityStars } from './CredibilityStars.tsx';
 
 interface IncidentDetailModalProps {
   incident: RoadIncident | null;
   onClose: () => void;
   isOnline: boolean;
-  onConfirmIncident: (incidentId: string) => Promise<void>;
-  onMarkResolved: (incidentId: string, note: string) => Promise<void>;
+  defaultValidatorName: string;
+  onConfirmIncident: (incidentId: string, validatorName: string) => Promise<void>;
+  onMarkResolved: (incidentId: string, note: string, actorName: string) => Promise<void>;
 }
 
 const SOLUTION_STEPS: { stage: SolutionStage; label: string }[] = [
@@ -39,10 +41,12 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   incident,
   onClose,
   isOnline,
+  defaultValidatorName,
   onConfirmIncident,
   onMarkResolved,
 }) => {
   const [resolutionNote, setResolutionNote] = useState('');
+  const [validatorName, setValidatorName] = useState(defaultValidatorName);
   const [copied, setCopied] = useState(false);
   const [busyAction, setBusyAction] = useState<'confirm' | 'resolve' | null>(null);
 
@@ -65,7 +69,10 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const handleConfirm = async () => {
     setBusyAction('confirm');
     try {
-      await onConfirmIncident(incident.id);
+      await onConfirmIncident(
+        incident.id,
+        validatorName.trim() || defaultValidatorName || 'Morador da comunidade'
+      );
     } finally {
       setBusyAction(null);
     }
@@ -76,7 +83,8 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     try {
       await onMarkResolved(
         incident.id,
-        resolutionNote.trim() || 'Trecho desobstruído e liberado para tráfego.'
+        resolutionNote.trim() || 'Trecho desobstruído e liberado para tráfego.',
+        validatorName.trim() || defaultValidatorName || 'Morador da comunidade'
       );
       setResolutionNote('');
     } finally {
@@ -98,10 +106,10 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
       aria-modal="true"
       aria-labelledby="incident-detail-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border border-[#D9DFD4] bg-white shadow-2xl sm:rounded-2xl">
-        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[#D4DBD0] sm:hidden" />
+      <div className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border border-black/8 bg-white shadow-2xl sm:rounded-3xl">
+        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-black/15 sm:hidden" />
 
-        <div className="flex items-start justify-between gap-4 border-b border-[#E7ECE2] px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-black/8 px-6 py-4">
           <div className="min-w-0">
             <div className={`flex items-center gap-1.5 text-xs font-bold ${severityColor}`}>
               {incident.severity === SeverityLevel.Blocked ? (
@@ -114,11 +122,11 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
               <span>{getSeverityLabel(incident.severity)}</span>
             </div>
 
-            <h2 id="incident-detail-title" className="mt-1 font-display text-xl font-bold text-[#18241D]">
+            <h2 id="incident-detail-title" className="mt-1 font-display text-xl font-bold text-[#141A16]">
               {incident.title}
             </h2>
 
-            <p className="mt-1 text-xs text-[#55635A] tabular-nums">
+            <p className="mt-1 text-xs text-[#57645C] tabular-nums">
               {incident.communityName} · {incident.roadName} · {formatRelativeTime(incident.updatedAt)}
             </p>
           </div>
@@ -127,7 +135,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Fechar detalhes da ocorrência"
-            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl text-[#4A5950] hover:bg-[#F1F4EE]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full text-[#57645C] hover:bg-[#F7F6F2]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -148,7 +156,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                 Sem foto anexada
               </div>
             )}
-            <div className="bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 py-3 text-white absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 py-3 text-white absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 text-xs">
               <span>Enviado por {incident.authorName}</span>
               <span className="font-mono tabular-nums">
                 GPS {incident.lat.toFixed(4)}, {incident.lng.toFixed(4)}
@@ -156,12 +164,26 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             </div>
           </div>
 
+          {/* Author Credibility Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E2E6DC] bg-[#F8FAF6] px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-[#18241D]">
+                Credibilidade de {incident.authorName}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <CredibilityStars stars={incident.authorStars || 4} />
+                <AchievementSymbols achievements={incident.authorAchievements} showLabels />
+              </div>
+            </div>
+            <div className="text-right font-mono text-xs font-bold text-[#14532D] tabular-nums">
+              {incident.confirmations} validações
+            </div>
+          </div>
+
           {/* Description & Metadata */}
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2 text-xs text-[#55635A] tabular-nums">
               <span>Tipo: {getCategoryLabel(incident.category)}</span>
-              <span aria-hidden="true">·</span>
-              <span>{incident.confirmations} confirmações de moradores</span>
               {incident.isOfflinePending && (
                 <>
                   <span aria-hidden="true">·</span>
@@ -221,7 +243,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#15803D]/30 bg-[#15803D]/10 px-4 py-2.5 text-xs font-bold text-[#14532D] hover:bg-[#15803D]/15"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[#15803D]/25 bg-[#15803D]/8 px-4 py-2.5 text-xs font-bold text-[#14532D] hover:bg-[#15803D]/14"
             >
               <MessageCircle className="h-4 w-4" />
               Avisar no WhatsApp da Região
@@ -230,25 +252,39 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             <button
               type="button"
               onClick={() => void handleCopyAlert()}
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#D4DBD0] bg-white px-4 py-2.5 text-xs font-semibold text-[#18241D] hover:bg-[#F1F4EE]"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-black/10 bg-[#F7F6F2] px-4 py-2.5 text-xs font-semibold text-[#141A16] hover:bg-[#EFECE4]"
             >
               {copied ? <Check className="h-4 w-4 text-[#15803D]" /> : <Copy className="h-4 w-4" />}
               {copied ? 'Texto copiado!' : 'Copiar aviso com GPS'}
             </button>
           </div>
 
-          {/* Interactive Feedback & Mark Resolved */}
+          {/* Interactive Validation & Mark Resolved (Awards Ranking Points) */}
           {!incident.isOfflinePending && (
-            <div className="space-y-3 border-t border-[#E7ECE2] pt-4">
+            <div className="space-y-3 border-t border-black/8 pt-4">
+              <div>
+                <label htmlFor="validator-name-input" className="block text-xs font-bold text-[#141A16]">
+                  Seu nome para somar pontos na validação
+                </label>
+                <input
+                  id="validator-name-input"
+                  type="text"
+                  value={validatorName}
+                  onChange={(e) => setValidatorName(e.target.value)}
+                  placeholder="Ex: Maria Aparecida de Souza"
+                  className="mt-1.5 min-h-[40px] w-full rounded-xl border border-black/10 bg-[#F7F6F2] px-3 text-xs text-[#141A16] placeholder:text-[#7B8A80] focus:border-[#14532D] focus:outline-none"
+                />
+              </div>
+
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   disabled={!isOnline || busyAction !== null}
                   onClick={() => void handleConfirm()}
-                  className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#D4DBD0] bg-white px-4 py-2.5 text-xs font-bold text-[#18241D] hover:bg-[#F1F4EE] disabled:opacity-50"
+                  className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full border border-[#14532D]/25 bg-[#14532D]/8 px-4 py-2.5 text-xs font-bold text-[#14532D] hover:bg-[#14532D]/14 disabled:opacity-50"
                 >
-                  <ThumbsUp className="h-4 w-4 text-[#14532D]" />
-                  {busyAction === 'confirm' ? 'Confirmando...' : 'Ainda está assim'}
+                  <ShieldCheck className="h-4 w-4" />
+                  {busyAction === 'confirm' ? 'Validando...' : 'Validar Aviso (+5 pts)'}
                 </button>
 
                 {incident.severity !== SeverityLevel.Cleared && (
@@ -256,10 +292,10 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                     type="button"
                     disabled={!isOnline || busyAction !== null}
                     onClick={() => void handleResolve()}
-                    className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#14532D] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#166534] disabled:opacity-50"
+                    className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-[#14532D] px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#166534] disabled:opacity-50"
                   >
                     <MapPin className="h-4 w-4" />
-                    {busyAction === 'resolve' ? 'Atualizando...' : 'Confirmar Trecho Liberado'}
+                    {busyAction === 'resolve' ? 'Atualizando...' : 'Confirmar Liberado (+12 pts)'}
                   </button>
                 )}
               </div>

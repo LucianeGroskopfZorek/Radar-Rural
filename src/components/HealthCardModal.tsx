@@ -77,15 +77,15 @@ export const HealthCardModal: React.FC<HealthCardModalProps> = ({
       aria-modal="true"
       aria-labelledby="health-card-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-[#D9DFD4] bg-white shadow-2xl sm:rounded-2xl">
-        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[#D4DBD0] sm:hidden" />
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-black/8 bg-white shadow-2xl sm:rounded-3xl">
+        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-black/15 sm:hidden" />
 
-        <div className="flex items-center justify-between border-b border-[#E7ECE2] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-black/8 px-6 py-4">
           <div>
-            <h2 id="health-card-title" className="font-display text-lg font-bold text-[#18241D]">
+            <h2 id="health-card-title" className="font-display text-lg font-bold text-[#141A16]">
               Cartão de Saúde Offline
             </h2>
-            <p className="text-xs text-[#55635A]">
+            <p className="text-xs text-[#57645C]">
               Salvo no aparelho para apresentar no posto rural ou hospital sem internet
             </p>
           </div>
@@ -93,7 +93,7 @@ export const HealthCardModal: React.FC<HealthCardModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Fechar cartão de saúde"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[#4A5950] hover:bg-[#F1F4EE]"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[#57645C] hover:bg-[#F7F6F2]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -152,7 +152,7 @@ export const HealthCardModal: React.FC<HealthCardModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#D4DBD0] bg-white px-4 py-2.5 text-xs font-bold text-[#18241D] hover:bg-[#F1F4EE]"
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-black/10 bg-[#F7F6F2] px-4 py-2.5 text-xs font-bold text-[#141A16] hover:bg-[#EFECE4]"
               >
                 <Edit3 className="h-4 w-4" />
                 Atualizar Meus Dados de Saúde
@@ -264,13 +264,13 @@ export const HealthCardModal: React.FC<HealthCardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="min-h-[44px] flex-1 rounded-xl border border-[#D4DBD0] bg-white px-4 text-xs font-bold text-[#18241D] hover:bg-[#F1F4EE]"
+                  className="min-h-[44px] flex-1 rounded-full border border-black/10 bg-[#F7F6F2] px-4 text-xs font-bold text-[#141A16] hover:bg-[#EFECE4]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="min-h-[44px] flex-1 rounded-xl bg-[#14532D] px-4 text-xs font-bold text-white hover:bg-[#166534]"
+                  className="min-h-[44px] flex-1 rounded-full bg-[#14532D] px-4 text-xs font-bold text-white shadow-xs hover:bg-[#166534]"
                 >
                   Salvar Ficha Offline
                 </button>
